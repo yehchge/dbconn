@@ -1,0 +1,22 @@
+{
+    "name": "yehchge/dbconn",
+    "version": "1.0.0",
+    "description": "php pdo database connection for MySQL ...",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "yehchge",
+            "email": "yehchge@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+    	"php":">="5.3.0"
+    },
+    "autoload": {
+    	"psr-4": {
+	    "yehchge\\dbconn\\": "src/"
+	}
+    }
+}
