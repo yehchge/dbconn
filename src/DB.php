@@ -69,6 +69,15 @@ class DB extends PDO {
         }
     }
     
+
+    public function getRowCount($table)
+    {
+        $this->_sql = "SELECT COUNT(1) FROM $table";
+        $res = $this->query($this->_sql);
+        $count = $res->fetchColumn();
+        return $count;
+    }
+
     /**
      * @param string $query Build a query with ? marks in the proper order,
      *    eg: SELECT :email, :password FROM tablename WHERE userid = :userid
