@@ -48,10 +48,6 @@ class DB extends PDO {
             die($e->getMessage().PHP_EOL);
         }
     }
-
-    public static function world(){
-    	return 'Hello World'.PHP_EOL;
-    }
     
     /**
      * @param constant $fetchMode Use the PDO fetch constants, eg: PDO::FETCH_CLASS
@@ -284,11 +280,11 @@ class DB extends PDO {
     }
 
     public function commit() {
-        parent::commit();
+        return parent::commit();
     }
 
     public function rollback() {
-        parent::rollback();
+        return parent::rollback();
     }
     
     /**

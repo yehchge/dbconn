@@ -9,14 +9,6 @@ class DBTest extends TestCase
 {
     use TestCaseTrait;
 
-    /**
-     * @covers \DB
-     */
-    public function test_world(): void
-    {
-        $this->assertEquals('Hello World'.PHP_EOL, DB::world());
-    }
-
     // protected function setUp(): void
     // {
     //     $database = "myguestbook";;
@@ -36,12 +28,9 @@ class DBTest extends TestCase
     //     $this->getDataSet();
     // }
 
-
-
-
-    public function getConnection()
+    public function init()
     {
-        $database = "myguestbook";;
+        $database = "myguestbook";
         $user = 'root';
         $password = '123456';
         $db = array(
@@ -52,7 +41,13 @@ class DBTest extends TestCase
             'pass' => $password
         );
         $pdo = new DB($db);
+        return $pdo;
+    }
 
+    public function getConnection()
+    {
+        $database = "myguestbook";
+        $pdo = $this->init();
         $pdo->exec('CREATE TABLE IF NOT EXISTS guestbook (id int, content text, user text, created text)');
         return $this->createDefaultDBConnection($pdo, $database);
     }
@@ -68,6 +63,182 @@ class DBTest extends TestCase
     public function testGetRowCount()
     {
         $this->assertEquals(2, $this->getConnection()->getRowCount('guestbook'));
+    }
+
+    /**
+     * @covers \DB
+     */
+    public function testSelect()
+    {
+        $pdo = $this->init();
+        $row = $pdo->row_array("SELECT id FROM guestbook WHERE user = :name", array('name'=>'joe'));
+        $this->assertEquals(1, $row['id']);
+    }
+
+    /**
+     * @covers \DB
+     */
+    public function testInsert()
+    {
+        $pdo = $this->init();
+        $total = $pdo->getRowCount('guestbook');
+        $id = $total+1;
+        $row = $pdo->insert('guestbook', array(
+            'id' => $id,
+            'content' => 'Good Insert',
+            'user' => "boy{$id}",
+            'created' => '2021-01-24 00:00:00'
+        ));
+        $row = $pdo->row_array("SELECT id FROM guestbook WHERE user = :name", array('name'=>'boy'.$id));
+        $this->assertEquals($id, $row['id']);
+    }
+
+    /**
+     * @covers \DB
+     */
+    public function testExec_insert()
+    {
+        $pdo = $this->init();
+        $total = $pdo->getRowCount('guestbook');
+        $id = $total+1;
+        $row = $pdo->exec_insert('guestbook', array(
+            'id' => $id,
+            'content' => 'exec_nsert',
+            'user' => "execboy{$id}",
+            'created' => '2021-01-24 00:00:00'
+        ));
+        $row = $pdo->row_array("SELECT id FROM guestbook WHERE user = :name", array('name'=>'execboy'.$id));
+        $this->assertEquals($id, $row['id']);
+    }
+
+    /**
+     * @covers \DB
+     */
+    public function testUpdate()
+    {
+        $pdo = $this->init();
+        $total = $pdo->getRowCount('guestbook');
+        $id = $total+1;
+        $data = array(
+            'content' => 'iLoveFish'           
+        );
+        $where = "id = :id";
+        $result = $pdo->update('guestbook', $data, $where, array('id'=>2));
+        $this->assertEquals(true, $result);
+    }
+
+    /**
+     * @covers \DB
+     */
+    public function testDelete(){
+        $pdo = $this->init();
+        $where = 'id = :id';
+        $result = $pdo->delete('guestbook', $where, array('id'=>2));
+        $this->assertEquals(true, $result);
+    }
+
+    /**
+     * @covers \DB
+     */
+    public function testInsertUpdate()
+    {
+        $pdo = $this->init();
+        $total = $pdo->getRowCount('guestbook');
+        $id = $total+1;
+        $row = $pdo->insertUpdate('guestbook', array(
+            'id' => $id,
+            'content' => 'insertUpdate',
+            'user' => "iuboy{$id}",
+            'created' => '2021-01-24 00:00:00'
+        ));
+        $row = $pdo->row_array("SELECT id FROM guestbook WHERE user = :name", array('name'=>'iuboy'.$id));
+        $this->assertEquals($id, $row['id']);
+    }
+
+    /**
+     * @covers \DB
+     */
+    public function testShowQuery()
+    {
+        $pdo = $this->init();
+        $row = $pdo->row_array("SELECT id FROM guestbook WHERE user = :name", array('name'=>'joe'));
+        $this->assertEquals('SELECT id FROM guestbook WHERE user = :name', $pdo->showQuery());
+    }
+
+    /**
+     * @covers \DB
+     */
+    public function testId()
+    {
+        $pdo = $this->init();
+        $total = $pdo->getRowCount('guestbook');
+        $id = $total+1;
+        $row = $pdo->insert('guestbook', array(
+            'id' => $id,
+            'content' => 'Get InsertID',
+            'user' => "boy{$id}",
+            'created' => '2021-01-24 00:00:00'
+        ));
+        $this->assertEquals(0, $pdo->id());
+    }
+
+    /**
+     * @covers \DB
+     */
+    public function testBeginTransaction()
+    {
+        $pdo = $this->init();
+        $total = $pdo->getRowCount('guestbook');
+        $id = $total+1;
+        $pdo->beginTransaction();
+        $row = $pdo->insert('guestbook', array(
+            'id' => $id,
+            'content' => 'BeginCommit',
+            'user' => "boy{$id}",
+            'created' => '2021-01-24 00:00:00'
+        ));
+        $result = $pdo->commit();
+        $this->assertEquals(true, $result);
+    }
+
+    /**
+     * @covers \DB
+     */
+    public function testRollback()
+    {
+        $pdo = $this->init();
+        $total = $pdo->getRowCount('guestbook');
+        $id = $total+1;
+        $pdo->beginTransaction();
+        $row = $pdo->insert('guestbook', array(
+            'id' => $id,
+            'content' => 'BeginRollBack',
+            'user' => "boy{$id}",
+            'created' => '2021-01-24 00:00:00'
+        ));
+        $result = $pdo->rollback();
+        $this->assertEquals(true, $result);
+    }
+
+    /**
+     * @covers \DB
+     */
+    public function testShowColumns()
+    {
+        $pdo = $this->init();
+        $result = $pdo->showColumns('guestbook');
+        $this->assertEquals('text', $result['column']['user']);
+    }
+
+    /**
+     * @covers \DB
+     */
+    public function testSetFetchMode()
+    {
+        $pdo = $this->init();
+        $pdo->setFetchMode(PDO::FETCH_CLASS);
+        $row = $pdo->row_array("SELECT id FROM guestbook WHERE user = :name", array('name'=>'joe'));
+        $this->assertEquals(1, $row->id);
     }
 
 }
