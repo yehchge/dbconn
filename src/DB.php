@@ -45,7 +45,7 @@ class DB extends PDO {
             self::setCharset();
             self::setFetchMode();
         } catch (PDOException $e) {
-            die($e->getMessage().PHP_EOL);
+            die("==>".$e->getMessage().PHP_EOL);
         }
     }
     
@@ -68,10 +68,14 @@ class DB extends PDO {
 
     public function getRowCount($table)
     {
-        $this->_sql = "SELECT COUNT(1) FROM $table";
-        $res = $this->query($this->_sql);
-        $count = $res->fetchColumn();
-        return $count;
+        try {
+            $this->_sql = "SELECT COUNT(1) FROM $table";
+            $res = $this->query($this->_sql);
+            $count = $res->fetchColumn();
+            return $count;
+        } catch (PDOException $e) {
+            die($e->getMessage().PHP_EOL);
+        }
     }
 
     /**

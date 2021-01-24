@@ -27,5 +27,5 @@ $row = $pdo->insert('guestbook', array(
 ));
 
 
-$result = $pdo->showColumns('guestbook');
+$result = $pdo->showColumns('users');
 echo "<pre>";print_r($result);

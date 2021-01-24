@@ -49,12 +49,22 @@ class DBTest extends TestCase
         $database = "myguestbook";
         $pdo = $this->init();
         $pdo->exec('CREATE TABLE IF NOT EXISTS guestbook (id int, content text, user text, created text)');
+        $pdo->exec('CREATE TABLE IF NOT EXISTS users (id int not null AUTO_INCREMENT, username text, PRIMARY KEY (id))');
         return $this->createDefaultDBConnection($pdo, $database);
     }
 
     public function getDataSet()
     {
         return $this->createFlatXMLDataSet(__DIR__.'/dataSets/myFlatXmlFixture.xml');
+    }
+
+    /**
+     * @covers \DB
+     */
+    public function testSetCharsetError()
+    {
+        $pdo = $this->init();
+        $pdo->setCharset('MIT');
     }
 
     /**
@@ -228,6 +238,9 @@ class DBTest extends TestCase
         $pdo = $this->init();
         $result = $pdo->showColumns('guestbook');
         $this->assertEquals('text', $result['column']['user']);
+
+        $result2 = $pdo->showColumns('users');
+        $this->assertEquals('id', $result2['primary']);
     }
 
     /**
@@ -240,5 +253,28 @@ class DBTest extends TestCase
         $row = $pdo->row_array("SELECT id FROM guestbook WHERE user = :name", array('name'=>'joe'));
         $this->assertEquals(1, $row->id);
     }
+
+    /**
+     * @covers \DB
+     */
+    // public function test_prepareAndBind()
+    // {
+    //     $pdo = $this->init();
+    //     $reflector = new ReflectionMethod(DB::class, '_prepareAndBind');
+    //     $reflector->setAccessible(true);
+
+    //     $this->assertEquals('', $reflector->invoke($pdo));
+    // }
+
+    /**
+     * @covers \DB
+     * @expectedException PHPUnit\Framework\Error\Error
+     */
+    // public function testException()
+    // {
+    //     $this->expectException(PDOException::class);
+    //     $pdo = $this->init();
+    //     $pdo->getRowCount('guestbook343');
+    // }
 
 }
