@@ -67,14 +67,14 @@ class DB extends PDO {
 
     public function getRowCount($table)
     {
-        try {
+        // try {
             $this->_sql = "SELECT COUNT(1) FROM $table";
             $res = $this->query($this->_sql);
             $count = $res->fetchColumn();
             return $count;
-        } catch (PDOException $e) {
-            die($e->getMessage().PHP_EOL);
-        }
+        // } catch (PDOException $e) {
+        //     die($e->getMessage().PHP_EOL);
+        // }
     }
 
     /**

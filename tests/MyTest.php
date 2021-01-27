@@ -9,18 +9,21 @@ class DBA
         $pdo = new PDO("mysql:host=".$_ENV['hostname'].";dbname=".$_ENV['database'],$_ENV['user'],$_ENV['password']);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        try {
+        // try {
             $res = $pdo->query("SELECT COUNT(1) FROM $table");
             $count = $res->fetchColumn();
             return $count;
-        } catch (PDOException $e) {
-            die($e->getMessage().PHP_EOL);
-        }
+        // } catch (PDOException $e) {
+        //     die($e->getMessage().PHP_EOL);
+        // }
     }
 }
 
 class MyTest extends TestCase
 {
+    /**
+     * @covers \DBA
+     */
     public function testPDOException() : void
     {
         $pdo = new DBA();
@@ -29,7 +32,7 @@ class MyTest extends TestCase
         $this->expectException(PDOException::class);
 
         // Act
-        $row = $pdo->getRowCount('users');
+        $row = $pdo->getRowCount('wrongtable');
     }
 }
 

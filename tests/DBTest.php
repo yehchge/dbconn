@@ -256,7 +256,7 @@ class DBTest extends TestCase
         $this->expectException(PDOException::class);
 
         // Act
-        $row = $pdo->getRowCount('users');
+        $row = $pdo->getRowCount('wrongtable');
     }
 
     /**
