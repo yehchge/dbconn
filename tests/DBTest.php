@@ -30,12 +30,12 @@ class DBTest extends TestCase
 
     public function init()
     {
-        $database = "myguestbook";
-        $user = 'root';
-        $password = '123456';
+        $database = $_ENV['database'];
+        $user = $_ENV['user'];
+        $password = $_ENV['password'];
         $db = array(
             'type' => 'mysql',
-            'host' => 'localhost',
+            'host' => $_ENV['hostname'],
             'name' => $database,
             'user' => $user,
             'pass' => $password
@@ -46,7 +46,7 @@ class DBTest extends TestCase
 
     public function getConnection()
     {
-        $database = "myguestbook";
+        $database = "test";
         $pdo = $this->init();
         $pdo->exec('CREATE TABLE IF NOT EXISTS guestbook (id int, content text, user text, created text)');
         $pdo->exec('CREATE TABLE IF NOT EXISTS users (id int not null AUTO_INCREMENT, username text, PRIMARY KEY (id))');
@@ -56,15 +56,6 @@ class DBTest extends TestCase
     public function getDataSet()
     {
         return $this->createFlatXMLDataSet(__DIR__.'/dataSets/myFlatXmlFixture.xml');
-    }
-
-    /**
-     * @covers \DB
-     */
-    public function testSetCharsetError()
-    {
-        $pdo = $this->init();
-        $pdo->setCharset('MIT');
     }
 
     /**
@@ -253,6 +244,29 @@ class DBTest extends TestCase
         $row = $pdo->row_array("SELECT id FROM guestbook WHERE user = :name", array('name'=>'joe'));
         $this->assertEquals(1, $row->id);
     }
+
+    /**
+     * @covers \DB
+     */
+    public function testPDOException() : void
+    {
+        $pdo = $this->init();
+
+        // Assert
+        $this->expectException(PDOException::class);
+
+        // Act
+        $row = $pdo->getRowCount('errtable');
+    }
+
+    /**
+     * @covers \DB
+     */
+    // public function testSetCharsetError()
+    // {
+    //     $pdo = $this->init();
+    //     $pdo->setCharset('MIT');
+    // }
 
     /**
      * @covers \DB

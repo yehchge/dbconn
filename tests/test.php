@@ -2,12 +2,12 @@
 
 require __DIR__.'/../src/DB.php';
 
-$database = "myguestbook";;
-$user = 'root';
-$password = '123456';
+$database = $_ENV['database'];
+$user = $_ENV['user'];
+$password = $_ENV['password'];
 $db = array(
     'type' => 'mysql',
-    'host' => 'localhost',
+    'host' => $_ENV['hostname'],
     'name' => $database,
     'user' => $user,
     'pass' => $password

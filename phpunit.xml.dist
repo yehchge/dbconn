@@ -14,4 +14,10 @@
     </testsuite>
   </testsuites>
   <logging/>
+  <php>
+    <env name="hostname" value="localhost"/>
+    <env name="database" value="test"/>
+    <env name="user" value="root"/>
+    <env name="password" value="123456"/>
+  </php>  
 </phpunit>
