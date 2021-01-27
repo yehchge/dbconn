@@ -39,8 +39,7 @@ class DB extends PDO {
         try {
             $dsn = $db['type'].':host='.$db['host'].';dbname='.$db['name'];
             parent::__construct($dsn, $db['user'], $db['pass'], array(
-                PDO::ATTR_PERSISTENT => $persistent,
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+                PDO::ATTR_PERSISTENT => $persistent, PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
             ));
             self::setCharset();
             self::setFetchMode();

@@ -29,7 +29,7 @@ class MyTest extends TestCase
         $this->expectException(PDOException::class);
 
         // Act
-        $row = $pdo->getRowCount('notable');
+        $row = $pdo->getRowCount('users');
     }
 }
 
