@@ -21,6 +21,7 @@ class DB extends PDO {
     // constant: select statement fetch mode
     private $_fetchMode = PDO::FETCH_ASSOC;
 
+    public $debug = 1;
     /**
      * Initializes a PDO connection
      * @param array $db An associative array containing the connection settings,
@@ -39,8 +40,9 @@ class DB extends PDO {
         try {
             $dsn = $db['type'].':host='.$db['host'].';dbname='.$db['name'];
             parent::__construct($dsn, $db['user'], $db['pass'], array(
-                PDO::ATTR_PERSISTENT => $persistent, PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+                PDO::ATTR_PERSISTENT => $persistent
             ));
+            // , PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
             self::setCharset();
             self::setFetchMode();
         } catch (PDOException $e) {
@@ -63,18 +65,37 @@ class DB extends PDO {
             die($e->getMessage().PHP_EOL);
         }
     }
+
+    private function _execute($sql){
+        return @$this->query($sql);
+    }
+
+    private function display_error(){
+        $err_no = $this->errorCode();
+        $err_info = $this->errorInfo();
+
+        if ($this->debug==1)
+        {
+            echo "Error no: ".$err_no."<br>";
+            echo "Error Message: ";
+            echo "<pre>";print_r($err_info);echo "</pre>";
+        }
+
+    }
     
 
     public function getRowCount($table)
     {
-        // try {
-            $this->_sql = "SELECT COUNT(1) FROM $table";
-            $res = $this->query($this->_sql);
+        $this->_sql = "SELECT COUNT(1) FROM $table";
+        $res = $this->_execute($this->_sql);
+        if($res === FALSE)
+        {
+            $this->display_error();
+            return FALSE;
+        } else {
             $count = $res->fetchColumn();
-            return $count;
-        // } catch (PDOException $e) {
-        //     die($e->getMessage().PHP_EOL);
-        // }
+            return $count;    
+        }
     }
 
     /**
@@ -114,7 +135,6 @@ class DB extends PDO {
     public function row_array($query, $bindParams = array())
     {
         try {
-
             $this->_sql = $query;
             
             if (!is_array($bindParams))

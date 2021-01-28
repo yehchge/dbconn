@@ -251,12 +251,9 @@ class DBTest extends TestCase
     public function testPDOException() : void
     {
         $pdo = $this->init();
-
-        // Assert
-        $this->expectException(PDOException::class);
-
-        // Act
+        $pdo->debug = 0;
         $row = $pdo->getRowCount('wrongtable');
+        $this->assertEquals(FALSE, $row);
     }
 
     /**
