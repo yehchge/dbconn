@@ -79,6 +79,19 @@ class DB extends PDO {
             echo "Error no: ".$err_no."<br>";
             echo "Error Message: ";
             echo "<pre>";print_r($err_info);echo "</pre>";
+            $trace = debug_backtrace();
+
+            foreach ($trace as $call)
+            {
+                if (isset($call['file']) && strpos($call['file'], BASEPATH.'database') === FALSE)
+                {
+                    // Found it - use a relative path for safety
+                    $message[] = 'Filename: '.str_replace(array(BASEPATH, APPPATH), '', $call['file']);
+                    $message[] = 'Line Number: '.$call['line'];
+
+                    break;
+                }
+            }
         }
 
     }

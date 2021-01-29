@@ -1,4 +1,5 @@
 .phpunit.result.cache
+.env
 phpunit.xml
 /vendor/
 /report/
