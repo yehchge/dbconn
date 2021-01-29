@@ -248,12 +248,37 @@ class DBTest extends TestCase
     /**
      * @covers \DB
      */
-    public function testPDOException() : void
+    public function testSelectException() : void
+    {
+        $pdo = $this->init();
+
+        // Assert
+        $this->expectException(Exception::class);
+
+        // Act
+        $res = $pdo->select("SELECT id FROM guestbook WHERE user = :name", 'wrongParam');
+    }
+
+    /**
+     * @covers \DB
+     */
+    public function testGetRowCountException() : void
     {
         $pdo = $this->init();
         $pdo->debug = 0;
-        $row = $pdo->getRowCount('wrongtable');
+        $row = $pdo->getRowCount('wrongTable');
         $this->assertEquals(FALSE, $row);
+    }
+
+    /**
+     * @covers \DB
+     */
+    public function testsetCharsetException() : void
+    {
+        $pdo = $this->init();
+        $pdo->debug = 0;
+        $res = $pdo->setCharset("wrongCharset");
+        $this->assertEquals(FALSE, $res);
     }
 
     /**

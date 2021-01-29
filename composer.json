@@ -18,7 +18,10 @@
     "autoload": {
     	"psr-4": {
 	       "yehchge\\dbconn\\": "src/"
-        }
+        },
+        "classmap": [
+            "src/"
+        ]
     },
     "scripts": {
         "test": [

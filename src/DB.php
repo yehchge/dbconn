@@ -42,7 +42,12 @@ class DB extends PDO {
             parent::__construct($dsn, $db['user'], $db['pass'], array(
                 PDO::ATTR_PERSISTENT => $persistent
             ));
-            // , PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+
+            parent::setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+            parent::setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT ); // 預設模式，不主動報錯
+            // parent::setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING ); // 引發 E_WARNING 錯誤，主動報錯
+            // parent::setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION ); // 主動丟擲 exceptions 異常，需要以try{}cath(){}輸出錯誤資訊。
+             
             self::setCharset();
             self::setFetchMode();
         } catch (PDOException $e) {
@@ -59,41 +64,52 @@ class DB extends PDO {
     }
 
     public function setCharset($encode = "utf8") {
-        try {
-            parent::exec("SET names {$encode}");
-        } catch (PDOException $e) {
-            die($e->getMessage().PHP_EOL);
+        $res = $this->_exec("SET names {$encode}");
+
+        if ($res === FALSE)
+        {
+            $this->_display_error();
+            return FALSE;
         }
+        return $res;
+    }
+
+    private function _exec($sql){
+        // exec use in no return result, such as insert, update, delete etc.
+        // exec will return the number of data change.
+        $affected = self::exec($sql);
+        return $affected;
     }
 
     private function _execute($sql){
-        return @$this->query($sql);
+        return $this->query($sql);
     }
 
-    private function display_error(){
-        $err_no = $this->errorCode();
-        $err_info = $this->errorInfo();
+    private function _display_error(){
+        $error = $this->errorInfo();
+        echo "<pre>";print_r($error);
+        $message[] = "A Database Error Occurred";
+        $message[] = "Error Number: ".$error[1];
+        $message[] = $error[2];
 
         if ($this->debug==1)
         {
-            echo "Error no: ".$err_no."<br>";
-            echo "Error Message: ";
-            echo "<pre>";print_r($err_info);echo "</pre>";
             $trace = debug_backtrace();
-
+echo "<pre>";print_r($trace);
             foreach ($trace as $call)
             {
-                if (isset($call['file']) && strpos($call['file'], BASEPATH.'database') === FALSE)
+                if (isset($call['file']) && strpos($call['file'], __DIR__) === FALSE)
                 {
-                    // Found it - use a relative path for safety
-                    $message[] = 'Filename: '.str_replace(array(BASEPATH, APPPATH), '', $call['file']);
+                    $message[] = 'Filename: '.$call['file'];
                     $message[] = 'Line Number: '.$call['line'];
-
                     break;
                 }
             }
-        }
 
+            foreach($message as $msg){
+                echo $msg.PHP_EOL;
+            }
+        }
     }
     
 
@@ -103,7 +119,7 @@ class DB extends PDO {
         $res = $this->_execute($this->_sql);
         if($res === FALSE)
         {
-            $this->display_error();
+            $this->_display_error();
             return FALSE;
         } else {
             $count = $res->fetchColumn();
@@ -122,7 +138,7 @@ class DB extends PDO {
      */
     public function select($query, $bindParams = array())
     {
-        try {
+        // try {
             $this->_sql = $query;
             
             if (!is_array($bindParams))
@@ -130,14 +146,20 @@ class DB extends PDO {
             
             $sth = $this->_prepareAndBind($bindParams);
         
-            $result = $sth->execute();
+            $res = @$sth->execute();
+
+            if($res === FALSE)
+            {
+                $this->_display_error();
+                return FALSE;
+            }
             
-            $this->_handleError($result, __FUNCTION__);
+            // $this->_handleError($res, __FUNCTION__);
             
             return $sth->fetchAll($this->_fetchMode);
-        } catch (PDOException $e) {
-            die($e->getMessage().PHP_EOL);
-        }    
+        // } catch (PDOException $e) {
+        //     die($e->getMessage().PHP_EOL);
+        // }    
     }
 
     /**
