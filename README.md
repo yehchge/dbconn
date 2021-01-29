@@ -3,10 +3,14 @@
 ### HOW TO USE? ###
 1. Create Database myguestbook.
 
-2. Copy phpunit.xml.dist to phpunit.xml
+2. Copy .env.sample to .env
 
-3. Setting phpunit.xml
+3. Setting .env
 
-4. $composer install
+4. Copy phpunit.xml.dist to phpunit.xml
 
-5. $composer test
+5. Setting phpunit.xml
+
+6. $composer install
+
+7. $composer test

@@ -1,8 +1,11 @@
 <?php
 
-$_ENV['UNIQID'] = 'fly';
-putenv("UNIQID=C564f5a46sdf8z9sd8f4a9");
-echo "ddd = ".$_ENV['UNIQID'].PHP_EOL;
-echo print_r($_ENV);exit;
+require './vendor/autoload.php';
 
-echo 'My username is ' .$_ENV["USER"] . '!';
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
+
+echo 'hostname = '.$_ENV['hostname'].PHP_EOL;
+echo 'database = '.$_ENV['database'].PHP_EOL;
+echo 'user = '.$_ENV['user'].PHP_EOL;
+echo 'password = '.$_ENV['password'].PHP_EOL;
