@@ -3,30 +3,22 @@
 require __DIR__.'/../src/DB.php';
 
 use PHPUnit\Framework\TestCase;
-use PHPUnit\DbUnit\TestCaseTrait;
 
 class DBTest extends TestCase
 {
-    use TestCaseTrait;
 
-    // protected function setUp(): void
-    // {
-    //     $database = "myguestbook";;
-    //     $user = 'root';
-    //     $password = '123456';
-    //     $db = array(
-    //         'type' => 'mysql',
-    //         'host' => 'localhost',
-    //         'name' => $database,
-    //         'user' => $user,
-    //         'pass' => $password
-    //     );
-    //     $pdo = new DB($db);
+    protected function setUp(): void
+    {
+        $pdo = $this->init();
 
-    //     $pdo->exec('CREATE TABLE IF NOT EXISTS guestbook (id int, content text, uesr text, created text)');
-    //     $pdo->exec("use $database");
-    //     $this->getDataSet();
-    // }
+        $pdo->exec('CREATE TABLE IF NOT EXISTS guestbook (id int not null AUTO_INCREMENT, content text, user text, created text, PRIMARY KEY(id))');
+        $pdo->exec('CREATE TABLE IF NOT EXISTS users (id int not null AUTO_INCREMENT, username text, PRIMARY KEY (id))');
+        $pdo->exec('use '.$_ENV['database']);
+        $pdo->exec('TRUNCATE guestbook');
+        $pdo->exec('INSERT INTO guestbook(id,content,user,created) VALUE (1,"Hello buddy!","joe","2010-04-24 17:15:23")');
+        $pdo->exec('INSERT INTO guestbook(id,content,user,created) VALUE (2,"I like it!","nancy","2010-04-26 12:14:20")');
+        // $this->getDataSet();
+    }
 
     public function init()
     {
@@ -44,26 +36,28 @@ class DBTest extends TestCase
         return $pdo;
     }
 
-    public function getConnection()
-    {
-        $database = "test";
-        $pdo = $this->init();
-        $pdo->exec('CREATE TABLE IF NOT EXISTS guestbook (id int, content text, user text, created text)');
-        $pdo->exec('CREATE TABLE IF NOT EXISTS users (id int not null AUTO_INCREMENT, username text, PRIMARY KEY (id))');
-        return $this->createDefaultDBConnection($pdo, $database);
-    }
+    // public function getConnection()
+    // {
+    //     $database = $_ENV['database'];
+    //     $pdo = $this->init();
+    //     $pdo->exec('CREATE TABLE IF NOT EXISTS guestbook (id int, content text, user text, created text)');
+    //     $pdo->exec('CREATE TABLE IF NOT EXISTS users (id int not null AUTO_INCREMENT, username text, PRIMARY KEY (id))');
+    //     return $this->createDefaultDBConnection($pdo, $database);
+    // }
 
-    public function getDataSet()
-    {
-        return $this->createFlatXMLDataSet(__DIR__.'/dataSets/myFlatXmlFixture.xml');
-    }
+    // public function getDataSet()
+    // {
+    //     return $this->createFlatXMLDataSet(__DIR__.'/dataSets/myFlatXmlFixture.xml');
+    // }
 
     /**
      * @covers \DB
      */
     public function testGetRowCount()
     {
-        $this->assertEquals(2, $this->getConnection()->getRowCount('guestbook'));
+        $pdo = $this->init();
+        $count = $pdo->getRowCount('guestbook');
+        $this->assertEquals(2, $count);
     }
 
     /**
@@ -149,10 +143,11 @@ class DBTest extends TestCase
         $row = $pdo->insertUpdate('guestbook', array(
             'id' => $id,
             'content' => 'insertUpdate',
-            'user' => "iuboy{$id}",
+            'user' => "iuboy".$id,
             'created' => '2021-01-24 00:00:00'
         ));
         $row = $pdo->row_array("SELECT id FROM guestbook WHERE user = :name", array('name'=>'iuboy'.$id));
+       echo print_r($row);
         $this->assertEquals($id, $row['id']);
     }
 
@@ -164,23 +159,6 @@ class DBTest extends TestCase
         $pdo = $this->init();
         $row = $pdo->row_array("SELECT id FROM guestbook WHERE user = :name", array('name'=>'joe'));
         $this->assertEquals('SELECT id FROM guestbook WHERE user = :name', $pdo->showQuery());
-    }
-
-    /**
-     * @covers \DB
-     */
-    public function testId()
-    {
-        $pdo = $this->init();
-        $total = $pdo->getRowCount('guestbook');
-        $id = $total+1;
-        $row = $pdo->insert('guestbook', array(
-            'id' => $id,
-            'content' => 'Get InsertID',
-            'user' => "boy{$id}",
-            'created' => '2021-01-24 00:00:00'
-        ));
-        $this->assertEquals(0, $pdo->id());
     }
 
     /**

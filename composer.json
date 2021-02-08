@@ -29,7 +29,6 @@
         ]
     },
     "require-dev": {
-        "kornrunner/dbunit": "^6.0",
         "phpunit/phpunit": "^9.5"
     }
 }

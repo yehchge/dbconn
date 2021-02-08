@@ -44,7 +44,7 @@ class DB extends PDO {
             ));
 
             parent::setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-            parent::setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT ); // 預設模式，不主動報錯
+            parent::setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT ); // 預設模式，不主動報錯
             // parent::setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING ); // 引發 E_WARNING 錯誤，主動報錯
             // parent::setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION ); // 主動丟擲 exceptions 異常，需要以try{}cath(){}輸出錯誤資訊。
              
@@ -87,7 +87,9 @@ class DB extends PDO {
 
     private function _display_error(){
         $error = $this->errorInfo();
-        echo "<pre>";print_r($error);
+
+        if ($this->errorCode() == '00000') return true;
+
         $message[] = "A Database Error Occurred";
         $message[] = "Error Number: ".$error[1];
         $message[] = $error[2];
@@ -95,7 +97,7 @@ class DB extends PDO {
         if ($this->debug==1)
         {
             $trace = debug_backtrace();
-echo "<pre>";print_r($trace);
+
             foreach ($trace as $call)
             {
                 if (isset($call['file']) && strpos($call['file'], __DIR__) === FALSE)
@@ -143,10 +145,16 @@ echo "<pre>";print_r($trace);
             
             if (!is_array($bindParams))
                 throw new Exception("$bindParams must be an array");
-            
+
             $sth = $this->_prepareAndBind($bindParams);
-        
-            $res = @$sth->execute();
+
+            if($sth === FALSE)
+            {
+                $this->_display_error();
+                return FALSE;
+            }
+
+            $res = $sth->execute();
 
             if($res === FALSE)
             {
@@ -176,10 +184,22 @@ echo "<pre>";print_r($trace);
                 throw new Exception("$bindParams must be an array");
             
             $sth = $this->_prepareAndBind($bindParams);
+
+            if($sth === FALSE)
+            {
+                $this->_display_error();
+                return FALSE;
+            }
         
-            $result = $sth->execute();
+            $res = $sth->execute();
+
+            if($res === FALSE)
+            {
+                $this->_display_error();
+                return FALSE;
+            }
             
-            $this->_handleError($result, __FUNCTION__);
+            $this->_handleError($res, __FUNCTION__);
 
             $result = $sth->fetchAll($this->_fetchMode);
 
@@ -207,9 +227,21 @@ echo "<pre>";print_r($trace);
 
             $sth = $this->_prepareAndBind($data);
 
-            $result = $sth->execute();
+            if($sth === FALSE)
+            {
+                $this->_display_error();
+                return FALSE;
+            }
+
+            $res = $sth->execute();
+
+            if($res === FALSE)
+            {
+                $this->_display_error();
+                return FALSE;
+            }
             
-            $this->_handleError($result, __FUNCTION__);
+            $this->_handleError($res, __FUNCTION__);
             
             return $this->lastInsertId();
         } catch (PDOException $e) {
@@ -258,7 +290,19 @@ echo "<pre>";print_r($trace);
             
             $sth = $this->_prepareAndBind($data);
 
+            if($sth === FALSE)
+            {
+                $this->_display_error();
+                return FALSE;
+            }
+
             $sth = $this->_prepareAndBind($bindWhereParams, $sth);
+
+            if($sth === FALSE)
+            {
+                $this->_display_error();
+                return FALSE;
+            }
             
             $result = $sth->execute();
             
@@ -281,7 +325,13 @@ echo "<pre>";print_r($trace);
         try {
             $this->_sql = "DELETE FROM `{$table}` WHERE $where";
             
-            $sth = $this->_prepareAndBind($bindWhereParams);        
+            $sth = $this->_prepareAndBind($bindWhereParams);
+
+            if($sth === FALSE)
+            {
+                $this->_display_error();
+                return FALSE;
+            }      
             
             $result = $sth->execute();
 
@@ -304,13 +354,19 @@ echo "<pre>";print_r($trace);
             $updateString = $this->_prepareUpdateString($data);
 
             $this->_sql = "INSERT INTO `{$table}` (`{$insertString['names']}`) VALUES({$insertString['values']}) ON DUPLICATE KEY UPDATE {$updateString}";
-            
+
             $sth = $this->_prepareAndBind($data);
 
+            if($sth === FALSE)
+            {
+                $this->_display_error();
+                return FALSE;
+            }
+
             $result = $sth->execute();
-            
-            $this->_handleError($result, __FUNCTION__);
-            
+
+            // $this->_handleError($result, __FUNCTION__);
+       
             return $this->lastInsertId();
         } catch (PDOException $e) {
             die($e->getMessage().PHP_EOL);
@@ -374,6 +430,7 @@ echo "<pre>";print_r($trace);
     {
         if ($reuseStatement == false) {
             $sth = $this->prepare($this->_sql);
+            if($sth === false ) return false;
         } else {
             $sth = $reuseStatement;
         }
@@ -430,7 +487,7 @@ echo "<pre>";print_r($trace);
         if ($this->errorCode() != '00000')
         throw new Exception("Error: " . implode(',', $this->errorInfo()));
         
-        if ($result == false) 
+        if ($result === false) 
         {
             $error =  $method . " did not execute properly";
             throw new Exception($error);

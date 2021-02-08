@@ -27,7 +27,25 @@ $pdo->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT ); // 預設模式，
 // $row = $pdo->getRowCount('wrongtable');
 
 // $res = $pdo->select("SELECT * FROM guestbook WHERE uaser = :user", array('user'=>'joe'));
-$res = $pdo->select("SELECT * FROM gusdfestbook WHERE uadfasdfasser = 'joe'");
 
+// $sth = $pdo->prepare('SELECT skull FROM bones');
+// $sth->execute();
+// $arr = $sth->errorInfo();
+// print_r($arr);
+// exit;
 
-echo "<pre>";print_r($res);
+// $res = $pdo->select("SELECT * FROM guestbook WHERE user = 'joe'");
+// echo "<pre>";print_r($res);
+// 
+
+$total = $pdo->getRowCount('guestbook');
+$id = $total+1;
+$row = $pdo->insertUpdate('guestbook', array(
+    'id' => $id,
+    'content' => 'insertUpdate',
+    'user' => "iuboy".$id,
+    'created' => '2021-01-24 00:00:00'
+));
+echo 2341234;exit;
+$row = $pdo->row_array("SELECT id FROM guestbook WHERE user = :name", array('name'=>'iuboy'.$id));
+echo "id = ". $row['id'];
