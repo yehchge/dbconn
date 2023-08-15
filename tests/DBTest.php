@@ -9,6 +9,7 @@ class DBTest extends TestCase
 
     protected function setUp(): void
     {
+        // PDO
         $pdo = $this->init();
 
         $pdo->exec('CREATE TABLE IF NOT EXISTS guestbook (id int not null AUTO_INCREMENT, content text, user text, created text, PRIMARY KEY(id))');
@@ -17,8 +18,10 @@ class DBTest extends TestCase
         $pdo->exec('TRUNCATE guestbook');
         $pdo->exec('INSERT INTO guestbook(id,content,user,created) VALUE (1,"Hello buddy!","joe","2010-04-24 17:15:23")');
         $pdo->exec('INSERT INTO guestbook(id,content,user,created) VALUE (2,"I like it!","nancy","2010-04-26 12:14:20")');
-        // $this->getDataSet();
     }
+
+
+    # --------------------------- PDO ---------------------------
 
     public function init()
     {
@@ -140,14 +143,17 @@ class DBTest extends TestCase
         $pdo = $this->init();
         $total = $pdo->getRowCount('guestbook');
         $id = $total+1;
+
         $row = $pdo->insertUpdate('guestbook', array(
             'id' => $id,
             'content' => 'insertUpdate',
             'user' => "iuboy".$id,
             'created' => '2021-01-24 00:00:00'
         ));
+
         $row = $pdo->row_array("SELECT id FROM guestbook WHERE user = :name", array('name'=>'iuboy'.$id));
-       echo print_r($row);
+        // $row = $pdo->select("SELECT * FROM guestbook");
+
         $this->assertEquals($id, $row['id']);
     }
 
@@ -279,16 +285,4 @@ class DBTest extends TestCase
 
     //     $this->assertEquals('', $reflector->invoke($pdo));
     // }
-
-    /**
-     * @covers \DB
-     * @expectedException PHPUnit\Framework\Error\Error
-     */
-    // public function testException()
-    // {
-    //     $this->expectException(PDOException::class);
-    //     $pdo = $this->init();
-    //     $pdo->getRowCount('guestbook343');
-    // }
-
 }

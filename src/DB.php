@@ -7,7 +7,7 @@
  *    $db = new DB(array('type'=>'mysql', 'host'=>'dbhost','name'=>'dbname','user'=>'dbuser','pass'=>'dbpass'));
  *    $db->select("SELECT * FROM user WHERE id = :id", array('id', 25));
  *    $db->insert("user", array('name' => 'mary'));
- *    $db->update("user", array('name' => 'jackie), "id = '25'");
+ *    $db->update("user", array('name' => 'jackie'), "id = '25'");
  *    $db->delete("user", "id = '25'");
  * } catch (Exception $e) {
  *    echo $e->getMessage();
@@ -15,13 +15,14 @@
  */
 class DB extends PDO {
     
-     // string: last SQL command
+    // string: last SQL command
     private $_sql;
     
     // constant: select statement fetch mode
     private $_fetchMode = PDO::FETCH_ASSOC;
 
     public $debug = 1;
+
     /**
      * Initializes a PDO connection
      * @param array $db An associative array containing the connection settings,
@@ -39,18 +40,20 @@ class DB extends PDO {
     {
         try {
             $dsn = $db['type'].':host='.$db['host'].';dbname='.$db['name'];
-            parent::__construct($dsn, $db['user'], $db['pass'], array(
-                PDO::ATTR_PERSISTENT => $persistent
-            ));
+            parent::__construct($dsn, $db['user'], $db['pass']
+            //     , array(
+            //     PDO::ATTR_PERSISTENT => $persistent
+            // )
+            );
 
-            parent::setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+            // parent::setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
             parent::setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT ); // 預設模式，不主動報錯
-            // parent::setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING ); // 引發 E_WARNING 錯誤，主動報錯
+            // // parent::setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING ); // 引發 E_WARNING 錯誤，主動報錯
             // parent::setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION ); // 主動丟擲 exceptions 異常，需要以try{}cath(){}輸出錯誤資訊。
              
             self::setCharset();
             self::setFetchMode();
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             die("==>".$e->getMessage().PHP_EOL);
         }
     }
@@ -140,7 +143,7 @@ class DB extends PDO {
      */
     public function select($query, $bindParams = array())
     {
-        // try {
+        try {
             $this->_sql = $query;
             
             if (!is_array($bindParams))
@@ -162,12 +165,12 @@ class DB extends PDO {
                 return FALSE;
             }
             
-            // $this->_handleError($res, __FUNCTION__);
+            $this->_handleError($res, __FUNCTION__);
             
             return $sth->fetchAll($this->_fetchMode);
-        // } catch (PDOException $e) {
-        //     die($e->getMessage().PHP_EOL);
-        // }    
+        } catch (PDOException $e) {
+            die($e->getMessage().PHP_EOL);
+        }
     }
 
     /**
@@ -353,7 +356,19 @@ class DB extends PDO {
             $insertString = $this->_prepareInsertString($data);
             $updateString = $this->_prepareUpdateString($data);
 
-            $this->_sql = "INSERT INTO `{$table}` (`{$insertString['names']}`) VALUES({$insertString['values']}) ON DUPLICATE KEY UPDATE {$updateString}";
+            if($insertString === FALSE)
+            {
+                $this->_display_error();
+                return FALSE;
+            }
+
+            if($updateString === FALSE)
+            {
+                $this->_display_error();
+                return FALSE;
+            }
+
+            $this->_sql = "INSERT INTO `{$table}` (`{$insertString['names']}`) VALUES ({$insertString['values']}) ON DUPLICATE KEY UPDATE {$updateString}";
 
             $sth = $this->_prepareAndBind($data);
 
@@ -363,12 +378,21 @@ class DB extends PDO {
                 return FALSE;
             }
 
+            $sth = $this->_prepareAndBind($data, $sth);
+
+            if($sth === FALSE)
+            {
+                $this->_display_error();
+                return FALSE;
+            }
+
             $result = $sth->execute();
 
-            // $this->_handleError($result, __FUNCTION__);
+            $this->_handleError($result, __FUNCTION__);
        
             return $this->lastInsertId();
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
+            echo "Exception....";
             die($e->getMessage().PHP_EOL);
         }
     }
@@ -434,13 +458,15 @@ class DB extends PDO {
         } else {
             $sth = $reuseStatement;
         }
-        
+ 
         foreach ($data as $key => $value)
         {
             if (is_int($value)) {
                 $sth->bindValue(":$key", $value, PDO::PARAM_INT);
+                // $sth->bindParam(":$key", $value, PDO::PARAM_INT);
             } else {
                 $sth->bindValue(":$key", $value, PDO::PARAM_STR);
+                // $sth->bindParam(":$key", $value, PDO::PARAM_STR);
             }
         }
         
@@ -485,12 +511,13 @@ class DB extends PDO {
     {
         /** If it's an SQL error */
         if ($this->errorCode() != '00000')
-        throw new Exception("Error: " . implode(',', $this->errorInfo()));
+        throw new \Exception("Error: " . implode(',', $this->errorInfo()));
         
         if ($result === false) 
         {
+            echo $this->errorInfo();
             $error =  $method . " did not execute properly";
-            throw new Exception($error);
+            throw new \Exception($error);
         }
     }
 
